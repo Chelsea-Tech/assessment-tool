@@ -16,6 +16,7 @@ let currentClientId = null;
 let currentRole = 'engineer';
 let isLoading = false;
 let saveTimeout = null;
+let expandedCategories = new Set(); // Track which categories are expanded
 
 // Get client ID from URL path or query parameter
 function getClientId() {
@@ -321,8 +322,35 @@ function setRole(role) {
     event.target.classList.add('active');
 }
 
+// Improved category state management
+function saveExpandedCategories() {
+    // Save currently expanded categories to maintain state
+    expandedCategories.clear();
+    document.querySelectorAll('.category-section.expanded').forEach(section => {
+        const categoryName = section.querySelector('.category-header span').textContent.split(' (')[0];
+        expandedCategories.add(categoryName);
+    });
+}
+
+function restoreExpandedCategories() {
+    // Restore previously expanded categories
+    document.querySelectorAll('.category-section').forEach(section => {
+        const categoryName = section.querySelector('.category-header span').textContent.split(' (')[0];
+        if (expandedCategories.has(categoryName)) {
+            section.classList.add('expanded');
+            const items = section.querySelector('.category-items');
+            if (items) {
+                items.classList.add('expanded');
+            }
+        }
+    });
+}
+
 // Rendering functions
 function renderAssessment() {
+    // Save current expanded state before re-rendering
+    saveExpandedCategories();
+    
     const container = document.getElementById('assessmentContent');
     if (!container) return;
     
@@ -346,6 +374,9 @@ function renderAssessment() {
 
         container.appendChild(categoryDiv);
     });
+    
+    // Restore expanded state after re-rendering
+    restoreExpandedCategories();
 }
 
 function createPolicyHTML(policy) {
@@ -438,16 +469,24 @@ function createPolicyHTML(policy) {
     `;
 }
 
-// Category management
+// Category management with improved state preservation
 function toggleCategory(header) {
     const section = header.parentElement;
     const items = section.querySelector('.category-items');
     
     section.classList.toggle('expanded');
     items.classList.toggle('expanded');
+    
+    // Update our tracking set
+    const categoryName = header.querySelector('span').textContent.split(' (')[0];
+    if (section.classList.contains('expanded')) {
+        expandedCategories.add(categoryName);
+    } else {
+        expandedCategories.delete(categoryName);
+    }
 }
 
-// Policy update functions with backend integration
+// Policy update functions with improved UX (no re-rendering collapse)
 async function updateStatus(policyId, status) {
     const policy = findPolicyById(policyId);
     if (!policy) return;
@@ -457,14 +496,16 @@ async function updateStatus(policyId, status) {
     
     try {
         await updatePolicyInBackend(policyId, policy);
-        renderAssessment();
+        
+        // Update just this policy's status display without full re-render
+        updatePolicyStatusDisplay(policyId, status);
         updateStatistics();
         applyFilters();
         showSuccessMessage(`Policy status updated to ${status}`);
     } catch (error) {
         // Revert on error
         policy.status = oldStatus;
-        renderAssessment();
+        updatePolicyStatusDisplay(policyId, oldStatus);
         showErrorMessage('Failed to update policy status');
     }
 }
@@ -478,15 +519,60 @@ async function updateApproval(policyId, approval) {
     
     try {
         await updatePolicyInBackend(policyId, policy);
-        renderAssessment();
+        
+        // Update just this policy's approval display without full re-render
+        updatePolicyApprovalDisplay(policyId, approval);
         updateStatistics();
         applyFilters();
         showSuccessMessage(`Policy ${approval === 'approved' ? 'approved' : 'denied'}`);
     } catch (error) {
         // Revert on error
         policy.clientApproval = oldApproval;
-        renderAssessment();
+        updatePolicyApprovalDisplay(policyId, oldApproval);
         showErrorMessage('Failed to update approval status');
+    }
+}
+
+// Helper functions to update individual policy displays
+function updatePolicyStatusDisplay(policyId, status) {
+    const policyElement = document.querySelector(`[data-policy-id="${policyId}"]`);
+    if (!policyElement) return;
+    
+    // Update status buttons
+    const statusButtons = policyElement.querySelectorAll('.status-btn');
+    statusButtons.forEach(btn => btn.classList.remove('active'));
+    
+    if (status === 'Compliant') {
+        policyElement.querySelector('.status-btn.compliant')?.classList.add('active');
+    } else if (status === 'Partially Compliant') {
+        policyElement.querySelector('.status-btn.partial')?.classList.add('active');
+    } else if (status === 'Not-Compliant') {
+        policyElement.querySelector('.status-btn.non-compliant')?.classList.add('active');
+    }
+    
+    // Update status badge
+    const statusBadge = policyElement.querySelector('.current-status');
+    if (statusBadge) {
+        statusBadge.textContent = status || 'Pending Review';
+        statusBadge.className = `current-status ${status ? 
+            (status.includes('Compliant') && !status.includes('Not') ? 'Compliant' : 
+             status.includes('Partially') ? 'Partially' : 
+             status.includes('Not') ? 'Not' : 'pending') : 'pending'}`;
+    }
+}
+
+function updatePolicyApprovalDisplay(policyId, approval) {
+    const policyElement = document.querySelector(`[data-policy-id="${policyId}"]`);
+    if (!policyElement) return;
+    
+    // Update approval buttons
+    const approvalButtons = policyElement.querySelectorAll('.approval-btn');
+    approvalButtons.forEach(btn => btn.classList.remove('active'));
+    
+    if (approval === 'approved') {
+        policyElement.querySelector('.approval-btn.approve')?.classList.add('active');
+    } else if (approval === 'denied') {
+        policyElement.querySelector('.approval-btn.deny')?.classList.add('active');
     }
 }
 
@@ -550,7 +636,9 @@ async function saveRolloutDate() {
     
     try {
         await updatePolicyInBackend(currentPolicyId, policy);
-        renderAssessment();
+        
+        // Update just this policy's date display without full re-render
+        updatePolicyDateDisplay(currentPolicyId, selectedDate);
         applyFilters();
         
         if (selectedDate) {
@@ -562,11 +650,52 @@ async function saveRolloutDate() {
     } catch (error) {
         // Revert on error
         policy.rolloutDate = oldDate;
-        renderAssessment();
+        updatePolicyDateDisplay(currentPolicyId, oldDate);
         showErrorMessage('Failed to update rollout date');
     }
     
     closeDatePicker();
+}
+
+function updatePolicyDateDisplay(policyId, dateString) {
+    const policyElement = document.querySelector(`[data-policy-id="${policyId}"]`);
+    if (!policyElement) return;
+    
+    const dateButton = policyElement.querySelector('.control-btn[title="Set Rollout Date"]');
+    if (dateButton) {
+        const displayDate = formatDateForDisplay(dateString);
+        dateButton.innerHTML = `📅 ${displayDate}`;
+        
+        if (dateString) {
+            dateButton.classList.add('scheduled');
+        } else {
+            dateButton.classList.remove('scheduled');
+        }
+    }
+    
+    // Update rollout info in details
+    const rolloutContent = policyElement.querySelector('.detail-section:nth-of-type(4) .detail-content');
+    if (rolloutContent) {
+        let rolloutInfo = formatDateForDisplay(dateString);
+        if (dateString) {
+            const rolloutDate = new Date(dateString);
+            const today = new Date();
+            const diffTime = rolloutDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 0) {
+                rolloutInfo += ` (${diffDays} days from now)`;
+            } else if (diffDays === 0) {
+                rolloutInfo += ' (Today!)';
+            } else {
+                rolloutInfo += ` (${Math.abs(diffDays)} days overdue)`;
+            }
+        }
+        rolloutContent.textContent = rolloutInfo;
+    }
+    
+    // Update data attribute for filtering
+    policyElement.setAttribute('data-rollout', dateString || '');
 }
 
 function openTechModal(policyId) {
@@ -603,17 +732,45 @@ async function saveTechOwner() {
     
     try {
         await updatePolicyInBackend(currentPolicyId, policy);
-        renderAssessment();
+        
+        // Update just this policy's tech display without full re-render
+        updatePolicyTechDisplay(currentPolicyId, techSelect.value);
         applyFilters();
         showSuccessMessage('Technical owner assigned successfully');
     } catch (error) {
         // Revert on error
         policy.tech = oldTech;
-        renderAssessment();
+        updatePolicyTechDisplay(currentPolicyId, oldTech);
         showErrorMessage('Failed to assign technical owner');
     }
     
     closeTechModal();
+}
+
+function updatePolicyTechDisplay(policyId, techOwner) {
+    const policyElement = document.querySelector(`[data-policy-id="${policyId}"]`);
+    if (!policyElement) return;
+    
+    const techButton = policyElement.querySelector('.control-btn[title="Assign Technical Owner"]');
+    if (techButton) {
+        const displayTech = techOwner || 'Assign Tech';
+        techButton.innerHTML = `👤 ${displayTech}`;
+        
+        if (techOwner) {
+            techButton.classList.add('assigned');
+        } else {
+            techButton.classList.remove('assigned');
+        }
+    }
+    
+    // Update tech owner in details
+    const techContent = policyElement.querySelector('.detail-section:nth-of-type(3) .detail-content');
+    if (techContent) {
+        techContent.textContent = techOwner || 'Not assigned';
+    }
+    
+    // Update data attribute for filtering
+    policyElement.setAttribute('data-tech', techOwner || '');
 }
 
 // Statistics with backend integration
@@ -952,9 +1109,7 @@ async function initializeApp() {
             const headers = document.querySelectorAll('.category-header');
             headers.forEach((header, index) => {
                 if (index < 2) {
-                    if (!header.parentElement.classList.contains('expanded')) {
-                        toggleCategory(header);
-                    }
+                    toggleCategory(header);
                 }
             });
         }, 100);
