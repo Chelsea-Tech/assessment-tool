@@ -9,15 +9,32 @@
       "rewrite": "/index.html"
     },
     {
-      "route": "/*",
+      "route": "/styles.css",
+      "headers": {
+        "cache-control": "must-revalidate, max-age=86400"
+      }
+    },
+    {
+      "route": "/script.js",
+      "headers": {
+        "cache-control": "must-revalidate, max-age=86400"
+      }
+    },
+    {
+      "route": "/",
       "rewrite": "/homepage.html"
     }
   ],
   "navigationFallback": {
     "rewrite": "/homepage.html",
-    "exclude": ["/api/*", "*.{css,scss,js,png,gif,ico,jpg,svg}"]
+    "exclude": ["/api/*", "/styles.css", "/script.js", "*.{css,scss,js,png,gif,ico,jpg,svg}"]
   },
   "mimeTypes": {
-    ".json": "application/json"
+    ".json": "application/json",
+    ".css": "text/css",
+    ".js": "application/javascript"
+  },
+  "globalHeaders": {
+    "cache-control": "must-revalidate, max-age=3600"
   }
 }
