@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft Best Practices Assessment</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="role-engineer">
+    <div class="header">
+        <h1>Microsoft Best Practices Assessment</h1>
+        <p>Complete Security Policy Management (149 Policies)</p>
+    </div>
+
+    <div class="container">
+        <!-- Role Selector -->
+        <div class="role-selector">
+            <h3 style="margin-bottom: 1rem; color: #1e3c72;">Select Your Role</h3>
+            <button class="role-btn active" onclick="setRole('engineer')">Technical Engineer</button>
+            <button class="role-btn" onclick="setRole('client')">Client Representative</button>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="controls-section">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label for="statusFilter">Filter by Status</label>
+                    <select id="statusFilter" onchange="applyFilters()">
+                        <option value="">All Statuses</option>
+                        <option value="Compliant">Compliant</option>
+                        <option value="Partially Compliant">Partially Compliant</option>
+                        <option value="Not-Compliant">Not-Compliant</option>
+                        <option value="pending">Pending Review</option>
+                        <option value="overdue">Overdue Rollouts</option>
+                        <option value="scheduled">Scheduled Rollouts</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="impactFilter">Filter by User Impact</label>
+                    <select id="impactFilter" onchange="applyFilters()">
+                        <option value="">All Impact Levels</option>
+                        <option value="high">High Impact</option>
+                        <option value="medium">Medium Impact</option>
+                        <option value="low">Low Impact</option>
+                        <option value="unknown">Unknown Impact</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="techFilter">Filter by Tech Owner</label>
+                    <select id="techFilter" onchange="applyFilters()">
+                        <option value="">All Tech Owners</option>
+                        <option value="John Smith">John Smith</option>
+                        <option value="Sarah Johnson">Sarah Johnson</option>
+                        <option value="Mike Wilson">Mike Wilson</option>
+                        <option value="Emily Davis">Emily Davis</option>
+                        <option value="David Brown">David Brown</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="searchInput">Search Policies</label>
+                    <input type="text" id="searchInput" placeholder="Search policies..." oninput="applyFilters()">
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-btn" onclick="exportToCSV()">📊 Export to CSV</button>
+                <button class="action-btn" onclick="exportToJSON()">💾 Export to JSON</button>
+                <button class="action-btn" onclick="generateReport()">📋 Generate Report</button>
+                <button class="action-btn secondary" onclick="switchClient()">🔄 Switch Client</button>
+                <button class="action-btn secondary" onclick="listClients()">📋 View All Clients</button>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="stats-section">
+            <h3 style="color: #1e3c72; margin-bottom: 1rem; text-align: center;">Assessment Progress</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="compliantCount">0</div>
+                    <div class="stat-label">Compliant</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="partialCount">0</div>
+                    <div class="stat-label">Partially Compliant</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="nonCompliantCount">0</div>
+                    <div class="stat-label">Not-Compliant</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingCount">0</div>
+                    <div class="stat-label">Pending Review</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="approvedCount">0</div>
+                    <div class="stat-label">Client Approved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">Total Policies</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assessment Content -->
+        <div class="assessment-content">
+            <h2 style="color: #1e3c72; margin-bottom: 1.5rem; text-align: center;">Policy Assessment</h2>
+            <div id="assessmentContent" class="loading">
+                Loading assessment data...
+            </div>
+        </div>
+    </div>
+
+    <!-- Tech Owner Modal -->
+    <div id="techModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Assign Technical Owner</h3>
+                <p>Select the technical owner for this policy implementation.</p>
+            </div>
+            <div class="modal-body">
+                <select id="techSelect" style="width: 100%; padding: 0.5rem; border: 2px solid #e9ecef; border-radius: 4px;">
+                    <option value="">Select Technical Owner</option>
+                    <option value="John Smith">John Smith</option>
+                    <option value="Sarah Johnson">Sarah Johnson</option>
+                    <option value="Mike Wilson">Mike Wilson</option>
+                    <option value="Emily Davis">Emily Davis</option>
+                    <option value="David Brown">David Brown</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTechModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveTechOwner()">Assign</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Picker Modal -->
+    <div id="datePickerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Set Rollout Date</h3>
+                <p>Choose the planned rollout date for this policy.</p>
+            </div>
+            <div class="modal-body">
+                <input type="date" id="rolloutDateInput" style="width: 100%; padding: 0.5rem; border: 2px solid #e9ecef; border-radius: 4px;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDatePicker()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveRolloutDate()">Save Date</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
