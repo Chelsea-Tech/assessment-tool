@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft Assessment Portal - Chelsea Technologies</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .welcome-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .welcome-section h2 {
+            color: #1e3c72;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .welcome-section p {
+            font-size: 1.1rem;
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1e3c72;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 1.2rem;
+        }
+
+        .clients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .client-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .client-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #1e3c72;
+        }
+
+        .client-card h3 {
+            color: #1e3c72;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .client-card p {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .client-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-new {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-progress {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-complete {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .access-btn {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .access-btn:hover {
+            background: #2a5298;
+        }
+
+        .stats-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .admin-section {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .admin-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0 0.5rem;
+            transition: background 0.3s ease;
+        }
+
+        .admin-btn:hover {
+            background: #218838;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .clients-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Microsoft Assessment Portal</h1>
+        <p>Chelsea Technologies - Complete Security Policy Management</p>
+        <p class="subtitle">Select your organization to access your assessment</p>
+    </div>
+
+    <div class="container">
+        <div class="welcome-section">
+            <h2>Welcome to Your Security Assessment Dashboard</h2>
+            <p>Access your organization's Microsoft 365 security assessment, track compliance progress, and manage security policies. Each organization has a dedicated assessment environment with 149 comprehensive security policies.</p>
+        </div>
+
+        <div class="search-section">
+            <h2 style="color: #1e3c72; margin-bottom: 1rem;">Find Your Organization</h2>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="clientSearch" placeholder="Search for your organization...">
+            </div>
+            
+            <div id="clientsContainer" class="loading">
+                Loading client organizations...
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <h2 style="color: #1e3c72; margin-bottom: 1.5rem; text-align: center;">Platform Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalClients">60+</div>
+                    <div class="stat-label">Client Organizations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">149</div>
+                    <div class="stat-label">Security Policies</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Security Categories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Access Available</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <button class="admin-btn" onclick="createNewClient()">+ Add New Organization</button>
+        </div>
+    </div>
+
+    <script>
+        let clientList = [];
+
+        // Load client list
+        async function loadClientData() {
+            try {
+                const response = await fetch('/api/clients-list');
+                clientList = await response.json();
+                
+                renderClients();
+                updateTotalClients();
+            } catch (error) {
+                console.error('Failed to load client data:', error);
+                document.getElementById('clientsContainer').innerHTML = 
+                    '<p style="color: #dc3545; text-align: center;">Failed to load client data. Please refresh the page.</p>';
+            }
+        }
+
+        function renderClients(filteredClients = clientList) {
+            const container = document.getElementById('clientsContainer');
+            
+            if (filteredClients.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #6c757d;">No organizations found matching your search.</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="clients-grid">
+                    ${filteredClients.map(client => {
+                        return `
+                            <div class="client-card" onclick="accessClient('${client.id}')">
+                                <h3>${client.name}</h3>
+                                <p>Microsoft 365 Security Assessment - 149 policies across 8 categories</p>
+                                <div class="client-status">
+                                    <span class="status-badge status-new">Ready for Assessment</span>
+                                    <button class="access-btn" onclick="event.stopPropagation(); accessClient('${client.id}')">
+                                        Access →
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function updateTotalClients() {
+            document.getElementById('totalClients').textContent = clientList.length;
+        }
+
+        function accessClient(clientId) {
+            window.location.href = `/clients/${clientId}`;
+        }
+
+        function createNewClient() {
+            const clientName = prompt('Enter new organization name:');
+            if (!clientName) return;
+            
+            const clientId = clientName.toLowerCase()
+                .replace(/[^a-z0-9\s]/g, '')
+                .replace(/\s+/g, '-');
+            
+            window.location.href = `/clients/${clientId}`;
+        }
+
+        // Search functionality
+        document.getElementById('clientSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = clientList.filter(client => 
+                client.name.toLowerCase().includes(searchTerm) ||
+                client.id.toLowerCase().includes(searchTerm)
+            );
+            renderClients(filtered);
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadClientData);
+    </script>
+</body>
+</html>
